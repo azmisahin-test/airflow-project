@@ -1,0 +1,45 @@
+services:
+  airflow-webserver:
+    image: apache/airflow:2.7.2
+    restart: always
+    environment:
+      - _PIP_ADDITIONAL_REQUIREMENTS=apache-airflow-providers-google
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__FERNET_KEY=your_fernet_key
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////usr/local/airflow/airflow.db
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+    depends_on:
+      - airflow-scheduler
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.2
+    restart: always
+    command: scheduler
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////usr/local/airflow/airflow.db
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+
+  airflow-init:
+    image: apache/airflow:2.7.2
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////usr/local/airflow/airflow.db
+    command: db init
+    volumes:
+      - ./dags:/usr/local/airflow/dags
+    depends_on:
+      - airflow-webserver
+
+  airflow-worker:
+    image: apache/airflow:2.7.2
+    restart: always
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////usr/local/airflow/airflow.db
+    volumes:
+      - ./dags:/usr/local/airflow/dags
